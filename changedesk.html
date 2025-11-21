@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>자리 바꾸기 도구</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f3f4f6;
+      --bg-elevated: #ffffff;
+      --primary: #2563eb;
+      --primary-soft: #dbeafe;
+      --border: #e5e7eb;
+      --text-main: #111827;
+      --text-sub: #6b7280;
+      --radius-lg: 14px;
+      --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      background: radial-gradient(circle at top, #e0f2fe 0, #f9fafb 50%);
+      color: var(--text-main);
+    }
+
+    header {
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.4);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .header-sub {
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 18px auto 28px;
+      padding: 0 16px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 330px) minmax(0, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.96);
+      border-radius: 18px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(209, 213, 219, 0.8);
+      padding: 14px 14px 10px;
+    }
+
+    .panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-title span.icon {
+      font-size: 18px;
+    }
+
+    .panel-desc {
+      font-size: 11px;
+      color: var(--text-sub);
+      margin: 0 0 8px;
+    }
+
+    .field-group {
+      margin-bottom: 10px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .field-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    input[type="number"],
+    input[type="text"] {
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+      min-width: 0;
+    }
+
+    input[type="number"] {
+      width: 90px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: none;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-ghost {
+      background: #f9fafb;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+    }
+
+    .btn-small {
+      padding: 4px 8px;
+      font-size: 11px;
+    }
+
+    .btn-block {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .small-text {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .hr {
+      border-top: 1px dashed #e5e7eb;
+      margin: 8px 0;
+    }
+
+    /* 자리 영역 */
+    .seat-panel-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .seat-title {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .seat-title span.icon {
+      font-size: 18px;
+    }
+
+    .seat-caption {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .seat-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .chip {
+      font-size: 11px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      border: 1px solid #d1d5db;
+      cursor: pointer;
+    }
+
+    .chip.active {
+      background: #2563eb;
+      color: white;
+      border-color: #1d4ed8;
+    }
+
+    .seat-area {
+      background: #e5e7eb;
+      border-radius: 16px;
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .board-label {
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 4px 0 6px;
+    }
+
+    .board-top {
+      display: block;
+    }
+
+    .board-bottom {
+      display: none;
+    }
+
+    /* 선생님 시점일 때 칠판을 아래로 */
+    .seat-area.teacher-view .board-top {
+      display: none;
+    }
+    .seat-area.teacher-view .board-bottom {
+      display: block;
+    }
+
+    .seat-container-wrapper {
+      border-radius: 12px;
+      background-image: linear-gradient(#e5e7eb 1px, transparent 1px),
+        linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+      background-size: 40px 40px;
+      background-color: #f8fafc;
+      padding: 8px;
+      overflow: auto;
+      max-height: 480px;
+    }
+
+    /* 가로 6칸 고정 */
+    .seat-container {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(80px, 1fr));
+      gap: 8px;
+      min-height: 120px;
+      transition: transform 0.2s ease;
+    }
+
+    .seat-slot {
+      min-height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .seat-slot.empty {
+      opacity: 0.35;
+    }
+
+    .seat {
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+      cursor: grab;
+      padding: 4px 6px;
+      user-select: none;
+      width: 100%;
+    }
+
+    .seat.dragging {
+      opacity: 0.4;
+    }
+
+    .seat-inner {
+      transform-origin: center;
+    }
+
+    .seat-line-main {
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      margin-top: 2px;
+    }
+
+    .seat-line-sub {
+      font-size: 10px;
+      color: #6b7280;
+      text-align: center;
+      margin-top: 1px;
+    }
+
+    .no-seat {
+      font-size: 12px;
+      color: #9ca3af;
+      text-align: center;
+      padding: 30px 0;
+    }
+
+    /* 인쇄 스타일 */
+    @media print {
+      body {
+        background: #ffffff;
+      }
+
+      /* 도구 이름/헤더, 왼쪽 설정 패널, 툴바/설명 숨기기 */
+      header,
+      .panel-settings,
+      .seat-toolbar,
+      .seat-caption {
+        display: none !important;
+      }
+
+      /* 레이아웃을 1열로 → 좌석표가 전체 폭 사용 */
+      .page {
+        margin: 0;
+        padding: 5mm;
+        max-width: none;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .panel-seat {
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        width: 100%;
+      }
+
+      /* 좌석 영역을 가운데로, 가로 A4에 맞게 최대폭 확대 */
+      .seat-area {
+        border: none;
+        padding: 0;
+        max-width: 260mm; /* A4 가로(297mm)에서 좌우 여백 조금 */
+        margin: 0 auto;
+      }
+
+      .seat-container-wrapper {
+        max-height: none;
+        overflow: visible;
+        background-size: 30px 30px;
+        width: 100%;
+      }
+
+      .seat-container {
+        width: 100%;
+      }
+
+      .seat {
+        box-shadow: none;
+      }
+
+      .board-label {
+        margin: 6px 0 10px;
+        font-size: 12px;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <div class="header-title">자리 바꾸기 도구</div>
+        <div class="header-sub">
+          번호 설정 → 자리 생성 → 랜덤 배치 → 시점 반전 → 인쇄. (1인 1책상 · 가로 6칸 · 빈칸 허용)
+        </div>
+      </div>
+      <div class="small-text">
+        파일 하나로 실행 · 브라우저에서 바로 사용 가능
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="layout">
+      <!-- 왼쪽: 설정/랜덤/뷰 -->
+      <section class="panel panel-settings">
+        <h2 class="panel-title">
+          <span class="icon">🧩</span> 번호 설정
+        </h2>
+        <p class="panel-desc">
+          반 학생 번호 범위를 설정한 뒤, “자리 생성”을 눌러 주세요. <br />
+          1인 1책상, 가로 6칸으로 자동 배치되며, 빈 칸도 함께 생성됩니다.
+        </p>
+
+        <div class="field-group">
+          <span class="field-label">번호 범위</span>
+          <div class="field-row">
+            <label class="small-text">시작</label>
+            <input type="number" id="startNumber" value="1" min="1" />
+            <label class="small-text">끝</label>
+            <input type="number" id="endNumber" value="30" min="1" />
+          </div>
+          <div class="small-text">
+            예) 1번부터 29번까지 있으면 시작=1, 끝=29
+          </div>
+        </div>
+
+        <div class="field-group">
+          <button class="btn btn-primary btn-block" id="btnGenerateSeats">
+            자리 생성
+          </button>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2 class="panel-title">
+          <span class="icon">🎲</span> 랜덤 배치
+        </h2>
+        <p class="panel-desc">
+          현재 좌석(책상 위치)은 그대로 둔 채, 앉아 있는 학생 번호만 랜덤으로 섞습니다.
+        </p>
+
+        <div class="field-group">
+          <span class="field-label">자리 자동 섞기</span>
+          <button class="btn btn-primary btn-block" id="btnShuffleSeats">
+            전체 자리 랜덤 배치
+          </button>
+          <div class="small-text">
+            빈 칸은 그대로 두고, 앉아 있는 학생들만 서로 자리를 바꿉니다.
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <h2 class="panel-title">
+          <span class="icon">👀</span> 시점 & 인쇄
+        </h2>
+
+        <div class="field-group">
+          <span class="field-label">보기 시점</span>
+          <div class="field-row">
+            <button
+              class="btn btn-ghost btn-small"
+              id="btnViewStudent"
+            >
+              학생 시점
+            </button>
+            <button
+              class="btn btn-ghost btn-small"
+              id="btnViewTeacher"
+            >
+              선생님 시점 (반전 · 칠판 아래)
+            </button>
+          </div>
+          <div class="small-text">
+            선생님 시점은 칠판에서 교실을 바라본 방향 기준입니다. (좌우+위아래 반전)
+          </div>
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">인쇄</span>
+          <button class="btn btn-primary btn-block" id="btnPrint">
+            선생님 시점으로 인쇄
+          </button>
+          <div class="small-text">
+            인쇄 시에는 좌석표만 크게 출력됩니다.<br />
+            (브라우저 인쇄 설정에서 날짜/헤더는 끌 수 있습니다)
+          </div>
+        </div>
+      </section>
+
+      <!-- 오른쪽: 좌석 영역 -->
+      <section class="panel panel-seat">
+        <div class="seat-panel-header">
+          <div class="seat-title">
+            <span class="icon">🪑</span> 좌석 배치
+          </div>
+          <div class="seat-caption">
+            책상을 드래그해서 자리 위치를 바꿀 수 있습니다. (빈 칸으로도 이동 가능)
+          </div>
+        </div>
+
+        <div class="seat-toolbar">
+          <span class="small-text" id="seatInfoText">
+            아직 자리가 생성되지 않았습니다. 왼쪽에서 번호 설정 후 “자리 생성”을 눌러 주세요.
+          </span>
+        </div>
+
+        <div class="seat-area" id="seatArea">
+          <div class="board-label board-top">[ 칠판 ]</div>
+          <div class="seat-container-wrapper">
+            <div class="seat-container" id="seatContainer">
+              <div class="no-seat">
+                자리 생성 후 이곳에 좌석이 표시됩니다.
+              </div>
+            </div>
+          </div>
+          <div class="board-label board-bottom">[ 칠판 ]</div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // 상태: slots = 각 칸에 앉은 "학생 번호" 또는 null (빈칸)
+    let slots = []; // number | null
+    let viewMode = "student"; // 'student' | 'teacher'
+    let dragFromIndex = null;
+
+    const startInput = document.getElementById("startNumber");
+    const endInput = document.getElementById("endNumber");
+    const generateBtn = document.getElementById("btnGenerateSeats");
+    const shuffleBtn = document.getElementById("btnShuffleSeats");
+
+    const seatContainer = document.getElementById("seatContainer");
+    const seatInfoText = document.getElementById("seatInfoText");
+    const seatArea = document.getElementById("seatArea");
+    const btnViewStudent = document.getElementById("btnViewStudent");
+    const btnViewTeacher = document.getElementById("btnViewTeacher");
+    const btnPrint = document.getElementById("btnPrint");
+
+    const COLS = 6;
+
+    function clampNumber(value, min, fallback) {
+      const n = Number(value);
+      if (Number.isNaN(n) || n < min) return fallback;
+      return n;
+    }
+
+    // 자리 생성 (1인 1책상 + 여유 빈칸)
+    generateBtn.addEventListener("click", () => {
+      const start = clampNumber(startInput.value, 1, 1);
+      const end = clampNumber(endInput.value, start, start);
+      if (end < start) {
+        alert("끝 번호는 시작 번호보다 크거나 같아야 합니다.");
+        return;
+      }
+      const totalStudents = end - start + 1;
+
+      // 기본 줄 수 + 여유 1줄 (빈칸을 위한 추가 공간)
+      const baseRows = Math.ceil(totalStudents / COLS);
+      const rows = baseRows + 1; // 여유 1줄
+      const slotCount = rows * COLS;
+      const emptyCount = slotCount - totalStudents;
+
+      slots = new Array(slotCount).fill(null);
+
+      // 앞에서부터 학생 번호 채우기
+      let idx = 0;
+      for (let n = start; n <= end; n++) {
+        slots[idx++] = n;
+      }
+
+      seatInfoText.textContent =
+        `학생 ${start}번 ~ ${end}번 (총 ${totalStudents}명), ` +
+        `가로 ${COLS}칸 · 세로 ${rows}줄 (빈 칸 ${emptyCount}개)`;
+      renderSeats();
+    });
+
+    // 배열 섞기
+    function shuffleArray(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // 전체 자리 랜덤 배치 (빈칸 유지, 학생만 섞기)
+    shuffleBtn.addEventListener("click", () => {
+      if (!slots.length) {
+        alert("먼저 자리 생성을 해 주세요.");
+        return;
+      }
+      const occupiedIndexes = [];
+      const students = [];
+      slots.forEach((value, idx) => {
+        if (value !== null) {
+          occupiedIndexes.push(idx);
+          students.push(value);
+        }
+      });
+      if (!students.length) return;
+
+      const shuffledStudents = shuffleArray(students);
+      occupiedIndexes.forEach((slotIndex, i) => {
+        slots[slotIndex] = shuffledStudents[i];
+      });
+
+      renderSeats();
+    });
+
+    // 학생/선생님 시점에 따라 화면에서 보여주는 순서를 매핑
+    function getIndexForDisplayPosition(pos) {
+      const total = slots.length;
+      if (!total) return pos;
+      const rows = total / COLS;
+
+      if (viewMode === "student") {
+        return pos; // 그대로
+      } else {
+        // 180도 회전: 위아래 + 좌우 반전
+        const row = Math.floor(pos / COLS);
+        const col = pos % COLS;
+        const revRow = rows - 1 - row;
+        const revCol = COLS - 1 - col;
+        return revRow * COLS + revCol;
+      }
+    }
+
+    // 좌석 렌더링
+    function renderSeats() {
+      seatContainer.innerHTML = "";
+      seatArea.classList.toggle("teacher-view", viewMode === "teacher");
+
+      if (!slots.length) {
+        const div = document.createElement("div");
+        div.className = "no-seat";
+        div.textContent = "자리 생성 후 이곳에 좌석이 표시됩니다.";
+        seatContainer.appendChild(div);
+        return;
+      }
+
+      const total = slots.length;
+
+      for (let pos = 0; pos < total; pos++) {
+        const realIndex = getIndexForDisplayPosition(pos);
+        const studentNumber = slots[realIndex];
+
+        const slotDiv = document.createElement("div");
+        slotDiv.className = "seat-slot";
+        slotDiv.dataset.slotIndex = realIndex;
+
+        if (studentNumber === null) {
+          slotDiv.classList.add("empty");
+        } else {
+          const seatDiv = document.createElement("div");
+          seatDiv.className = "seat";
+          seatDiv.draggable = true;
+
+          const inner = document.createElement("div");
+          inner.className = "seat-inner";
+
+          const mainLine = document.createElement("div");
+          mainLine.className = "seat-line-main";
+          mainLine.textContent = `${studentNumber}번`;
+
+          const subLine = document.createElement("div");
+          subLine.className = "seat-line-sub";
+          subLine.textContent = "";
+
+          inner.appendChild(mainLine);
+          inner.appendChild(subLine);
+          seatDiv.appendChild(inner);
+          slotDiv.appendChild(seatDiv);
+
+          // 드래그 시작
+          seatDiv.addEventListener("dragstart", (e) => {
+            dragFromIndex = realIndex;
+            seatDiv.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "move";
+          });
+
+          seatDiv.addEventListener("dragend", () => {
+            dragFromIndex = null;
+            seatDiv.classList.remove("dragging");
+          });
+        }
+
+        // 드롭 존 (빈 칸 포함)
+        slotDiv.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+        });
+
+        slotDiv.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const targetIndex = Number(slotDiv.dataset.slotIndex);
+          if (dragFromIndex === null || dragFromIndex === targetIndex) return;
+
+          const fromValue = slots[dragFromIndex];
+          const toValue = slots[targetIndex];
+
+          // swap (빈칸 포함)
+          slots[targetIndex] = fromValue;
+          slots[dragFromIndex] = toValue ?? null;
+
+          renderSeats();
+        });
+
+        seatContainer.appendChild(slotDiv);
+      }
+    }
+
+    // 시점 변경
+    function updateViewButtons() {
+      if (viewMode === "student") {
+        btnViewStudent.classList.add("chip", "active");
+        btnViewTeacher.classList.remove("chip", "active");
+      } else {
+        btnViewTeacher.classList.add("chip", "active");
+        btnViewStudent.classList.remove("chip", "active");
+      }
+    }
+
+    btnViewStudent.addEventListener("click", () => {
+      viewMode = "student";
+      updateViewButtons();
+      renderSeats();
+    });
+
+    btnViewTeacher.addEventListener("click", () => {
+      viewMode = "teacher";
+      updateViewButtons();
+      renderSeats();
+    });
+
+    // 인쇄 (항상 선생님 시점으로)
+    btnPrint.addEventListener("click", () => {
+      viewMode = "teacher";
+      updateViewButtons();
+      renderSeats();
+      window.print();
+    });
+
+    // 초기 상태
+    updateViewButtons();
+    renderSeats();
+  </script>
+</body>
+</html>
